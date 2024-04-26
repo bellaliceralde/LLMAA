@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Supplies Inventory System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+			background-color: #B5E6C4;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .button-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .button-container button {
+            margin: 5px;
+            padding: 10px 20px;
+            background-color: black;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .button-container button:hover {
+            background-color: #3e8e41;
+        }
+
+        .inventory-actions {
+            border: 3px solid black;
+            padding: 10px;
+            margin-bottom: 15px;
+            width: 30%;
+        }
+
+        h3 {
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: calc(100% - 22px);
+            padding: 5px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Supplies Inventory</h1>
+    <div class="container">
+        <div class="inventory-actions">
+            <h3>Enter an Item</h3>
+            <input type="text" id="item-name" placeholder="Item Name">
+            <input type="number" id="item-quantity" placeholder="Quantity">
+            <div class="button-container">
+                <button onclick="addItem()">Add</button>
+            </div>
+        </div>
+        <div class="inventory-actions">
+            <h3>Modify Item</h3>
+            <select id="item-select"></select>
+            <input type="number" id="item-change" placeholder="Change Quantity">
+            <div class="button-container">
+                <button onclick="addNoOfItem()">Add</button>
+                <button onclick="subNoOfItem()">Remove</button>
+            </div>
+        </div>
+        <div class="inventory-actions">
+            <h3>Remove an Item</h3>
+            <select id="remove-select"></select>
+            <div class="button-container">
+                <button onclick="removeItem()">Remove</button>
+            </div>
+        </div>
+        <div class="inventory-actions">
+            <h2>Inventory</h2>
+            <table id="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        let supplies = [];
+
+        function addItem() {
+            const name = document.getElementById("item-name").value;
+            const num = parseInt(document.getElementById("item-quantity").value);
+
+            if (!name || !num || num <= 0) {
+                alert("Please enter a valid item name and quantity.");
+                return;
+            }
+
+            const existingItem = supplies.find(item => item.itemName === name);
+            if (existingItem) {
+                existingItem.noOfItem += num;
+            } else {
+                supplies.push({ itemName: name, noOfItem: num });
+            }
+            updateInventoryList();
+            clearInputFields();
+        }
+
+        function addNoOfItem() {
+            const selectedItem = document.getElementById("item-select").value;
+            const changeQuantity = parseInt(document.getElementById("item-change").value);
+
+            if (!selectedItem || !changeQuantity || changeQuantity <= 0) {
+                alert("Please select an item and enter a valid quantity.");
+                return;
+            }
+
+            const itemIndex = supplies.findIndex(item => item.itemName === selectedItem);
+            if (itemIndex !== -1) {
+                supplies[itemIndex].noOfItem += changeQuantity;
+                updateInventoryList();
+                clearInputFields();
+            } else {
+                alert("Item not found in inventory.");
+            }
+        }
+
+        function subNoOfItem() {
+            const selectedItem = document.getElementById("item-select").value;
+            const changeQuantity = parseInt(document.getElementById("item-change").value);
+
+            if (!selectedItem || !changeQuantity || changeQuantity <= 0) {
+                alert("Please select an item and enter a valid quantity.");
+                return;
+            }
+
+            const itemIndex = supplies.findIndex(item => item.itemName === selectedItem);
+            if (itemIndex !== -1) {
+                if (supplies[itemIndex].noOfItem >= changeQuantity) {
+                    supplies[itemIndex].noOfItem -= changeQuantity;
+                    updateInventoryList();
+                    clearInputFields();
+                } else {
+                    alert("Not enough quantity to subtract.");
+                }
+            } else {
+                alert("Item not found in inventory.");
+            }
+        }
+
+        function removeItem() {
+            const selectedItem = document.getElementById("remove-select").value;
+            const itemIndex = supplies.findIndex(item => item.itemName === selectedItem);
+
+            if (itemIndex !== -1) {
+                supplies.splice(itemIndex, 1);
+                updateInventoryList();
+                clearInputFields();
+            } else {
+                alert("Item not found in inventory.");
+            }
+        }
+
+        function updateInventoryList() {
+            const tableBody = document.querySelector("#inventory-table tbody");
+            tableBody.innerHTML = "";
+
+            supplies.forEach(item => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${item.itemName}</td>
+                    <td>${item.noOfItem}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            populateSelect();
+        }
+
+        function clearInputFields() {
+            document.getElementById("item-name").value = "";
+            document.getElementById("item-quantity").value = "";
+            document.getElementById("item-change").value = "";
+        }
+
+        function populateSelect() {
+            const select = document.getElementById("item-select");
+            const removeSelect = document.getElementById("remove-select");
+
+            select.innerHTML = "";
+            removeSelect.innerHTML = "";
+
+            supplies.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item.itemName;
+                option.text = item.itemName;
+                select.appendChild(option);
+
+                const removeOption = document.createElement("option");
+                removeOption.value = item.itemName;
+                removeOption.text = item.itemName;
+                removeSelect.appendChild(removeOption);
+            });
+        }
+
+        updateInventoryList();
+    </script>
+</body>
+</html>
